@@ -14,18 +14,24 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const auth_guard_1 = require("../auth/auth.guard");
-const users_service_1 = require("./users.service");
 const update_user_dto_1 = require("./dto/update-user.dto");
+const update_user_command_1 = require("./command/update-user.command");
+const get_user_info_query_1 = require("./query/get-user-info.query");
 let UsersController = class UsersController {
-    constructor(usersService) {
-        this.usersService = usersService;
+    constructor(commandBus, queryBus) {
+        this.commandBus = commandBus;
+        this.queryBus = queryBus;
     }
     async findOne(id) {
-        return await this.usersService.findById(id);
+        const getUserInfoQuery = new get_user_info_query_1.GetUserInfoQuery(id);
+        return this.queryBus.execute(getUserInfoQuery);
     }
     async update(id, updateUserDto) {
-        return await this.usersService.update(id, updateUserDto);
+        const { name, email } = updateUserDto;
+        const updateUserCommand = new update_user_command_1.UpdateUserCommand(id, name, email);
+        return this.commandBus.execute(updateUserCommand);
     }
 };
 __decorate([
@@ -47,7 +53,7 @@ __decorate([
 ], UsersController.prototype, "update", null);
 UsersController = __decorate([
     (0, common_1.Controller)('users'),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
+    __metadata("design:paramtypes", [cqrs_1.CommandBus, cqrs_1.QueryBus])
 ], UsersController);
 exports.UsersController = UsersController;
 //# sourceMappingURL=users.controller.js.map

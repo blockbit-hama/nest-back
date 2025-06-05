@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
@@ -18,11 +21,15 @@ const bcrypt = require("bcrypt");
 const uuid_1 = require("uuid");
 const config_1 = require("@nestjs/config");
 const nodemailer = require("nodemailer");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
+const user_entity_1 = require("../users/entities/user.entity");
 let AuthService = class AuthService {
-    constructor(usersService, jwtService, configService) {
+    constructor(usersService, jwtService, configService, usersRepository) {
         this.usersService = usersService;
         this.jwtService = jwtService;
         this.configService = configService;
+        this.usersRepository = usersRepository;
         this.transporter = nodemailer.createTransport({
             service: this.configService.get('EMAIL_SERVICE'),
             auth: {
@@ -51,7 +58,7 @@ let AuthService = class AuthService {
         }
         const hashedPassword = await bcrypt.hash(registerDto.password, 10);
         const signupVerifyToken = (0, uuid_1.v4)();
-        const user = await this.usersService._createUser(Object.assign(Object.assign({}, registerDto), { password: hashedPassword, signupVerifyToken, isEmailVerified: false }));
+        const user = await this.usersService.create(Object.assign(Object.assign({}, registerDto), { password: hashedPassword, signupVerifyToken, isEmailVerified: false }));
         await this.sendVerificationEmail(user.email, signupVerifyToken);
         const payload = { sub: user.id, email: user.email };
         return {
@@ -83,10 +90,9 @@ let AuthService = class AuthService {
         if (!user) {
             throw new common_1.NotFoundException('유효하지 않은 인증 토큰입니다.');
         }
-        await this.usersService.update(user.id, {
-            signupVerifyToken: null,
-            isEmailVerified: true,
-        });
+        user.signupVerifyToken = null;
+        user.isEmailVerified = true;
+        await this.usersRepository.save(user);
         const payload = { sub: user.id, email: user.email };
         return {
             access_token: this.jwtService.sign(payload),
@@ -104,9 +110,11 @@ let AuthService = class AuthService {
 };
 AuthService = __decorate([
     (0, common_1.Injectable)(),
+    __param(3, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [users_service_1.UsersService,
         jwt_1.JwtService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        typeorm_2.Repository])
 ], AuthService);
 exports.AuthService = AuthService;
 //# sourceMappingURL=auth.service.js.map

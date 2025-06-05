@@ -2,7 +2,6 @@ import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOneOptions } from 'typeorm';
 import { User } from './entities/user.entity';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { EntityNotFoundException } from '../exception/custom-exceptions';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
@@ -15,17 +14,6 @@ export class UsersService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
     this.logger.info('UsersService initialized', { context: 'UsersService' });
-  }
-
-  // AuthService에서만 사용하는 내부 메서드
-  async _createUser(userData: Partial<User>): Promise<User> {
-    this.logger.debug('Creating new user', {
-      context: 'UsersService',
-      email: userData.email,
-    });
-
-    const user = this.usersRepository.create(userData);
-    return await this.usersRepository.save(user);
   }
 
   async findOne(options: FindOneOptions<User>): Promise<User | null> {
@@ -54,14 +42,13 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    this.logger.debug('Updating user', {
-      context: 'UsersService',
-      userId: id,
-    });
+  // 다른 서비스에서 사용할 수 있는 기본 메서드들
+  async save(user: User): Promise<User> {
+    return await this.usersRepository.save(user);
+  }
 
-    await this.findById(id);
-    await this.usersRepository.update(id, updateUserDto);
-    return await this.findById(id);
+  async create(userData: Partial<User>): Promise<User> {
+    const user = this.usersRepository.create(userData);
+    return await this.usersRepository.save(user);
   }
 }

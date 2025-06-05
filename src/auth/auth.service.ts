@@ -15,6 +15,9 @@ import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +27,8 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {
     // 이메일 전송을 위한 transporter 초기화
     this.transporter = nodemailer.createTransport({
@@ -66,8 +71,8 @@ export class AuthService {
     // signupVerifyToken 생성
     const signupVerifyToken = uuidv4();
 
-    // 사용자 생성
-    const user = await this.usersService._createUser({
+    // 사용자 생성 - create 메서드 사용
+    const user = await this.usersService.create({
       ...registerDto,
       password: hashedPassword,
       signupVerifyToken,
@@ -118,11 +123,10 @@ export class AuthService {
       throw new NotFoundException('유효하지 않은 인증 토큰입니다.');
     }
 
-    // 인증 완료 처리
-    await this.usersService.update(user.id, {
-      signupVerifyToken: null,
-      isEmailVerified: true,
-    });
+    // 인증 완료 처리 - 직접 repository 사용
+    user.signupVerifyToken = null;
+    user.isEmailVerified = true;
+    await this.usersRepository.save(user);
 
     const payload = { sub: user.id, email: user.email };
     return {

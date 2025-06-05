@@ -26,14 +26,6 @@ let UsersService = class UsersService {
         this.logger = logger;
         this.logger.info('UsersService initialized', { context: 'UsersService' });
     }
-    async _createUser(userData) {
-        this.logger.debug('Creating new user', {
-            context: 'UsersService',
-            email: userData.email,
-        });
-        const user = this.usersRepository.create(userData);
-        return await this.usersRepository.save(user);
-    }
     async findOne(options) {
         return await this.usersRepository.findOne(options);
     }
@@ -55,14 +47,12 @@ let UsersService = class UsersService {
         }
         return user;
     }
-    async update(id, updateUserDto) {
-        this.logger.debug('Updating user', {
-            context: 'UsersService',
-            userId: id,
-        });
-        await this.findById(id);
-        await this.usersRepository.update(id, updateUserDto);
-        return await this.findById(id);
+    async save(user) {
+        return await this.usersRepository.save(user);
+    }
+    async create(userData) {
+        const user = this.usersRepository.create(userData);
+        return await this.usersRepository.save(user);
     }
 };
 UsersService = __decorate([

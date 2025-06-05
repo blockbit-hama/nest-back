@@ -21,6 +21,12 @@ __decorate([
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "name", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'test@example.com' }),
+    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateUserDto.prototype, "email", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({
         example: null,
         description: '이메일 인증 토큰',

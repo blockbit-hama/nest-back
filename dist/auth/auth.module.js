@@ -8,16 +8,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthModule = void 0;
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
 const users_module_1 = require("../users/users.module");
+const user_entity_1 = require("../users/entities/user.entity");
 let AuthModule = class AuthModule {
 };
 AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User]),
             (0, common_1.forwardRef)(() => users_module_1.UsersModule),
             jwt_1.JwtModule.registerAsync({
                 inject: [config_1.ConfigService],

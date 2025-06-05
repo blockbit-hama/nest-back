@@ -1,22 +1,27 @@
 import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { AuthGuard } from '../auth/auth.guard';
-import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { UpdateUserCommand } from './command/update-user.command';
+import { GetUserInfoQuery } from './query/get-user-info.query';
+import { UserInfo } from './UserInfo';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  async findOne(@Param('id') id: string) {
-    return await this.usersService.findById(id);
+  async findOne(@Param('id') id: string): Promise<UserInfo> {
+    const getUserInfoQuery = new GetUserInfoQuery(id);
+    return this.queryBus.execute(getUserInfoQuery);
   }
 
   @Patch(':id')
   @UseGuards(AuthGuard)
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return await this.usersService.update(id, updateUserDto);
+    const { name, email } = updateUserDto;
+    const updateUserCommand = new UpdateUserCommand(id, name, email);
+    return this.commandBus.execute(updateUserCommand);
   }
 }
