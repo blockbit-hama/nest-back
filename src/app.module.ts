@@ -1,20 +1,29 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { WinstonModule } from 'nest-winston';
 import emailConfig from './config/emailConfig';
-import databaseConfig from './config/database.config';  // 추가
+import databaseConfig from './config/database.config';
+import loggingConfig from './config/logging.config';
 import { validationSchema } from './config/validationSchema';
 import { UsersModule } from './users/users.module';
 import authConfig from './config/authConfig';
 
 @Module({
   imports: [
-    UsersModule,
     ConfigModule.forRoot({
-      envFilePath: [`${__dirname}/config/env/.${process.env.NODE_ENV || 'development'}.env`],
-      load: [emailConfig, authConfig,  databaseConfig],  // databaseConfig 추가
+      envFilePath: [
+        `${__dirname}/config/env/.${process.env.NODE_ENV || 'development'}.env`,
+      ],
+      load: [emailConfig, authConfig, databaseConfig, loggingConfig],
       isGlobal: true,
       validationSchema,
+    }),
+    WinstonModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) =>
+        configService.get('logging.options'),
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -31,6 +40,7 @@ import authConfig from './config/authConfig';
       }),
       inject: [ConfigService],
     }),
+    UsersModule,
   ],
   controllers: [],
   providers: [],

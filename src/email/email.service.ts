@@ -1,9 +1,8 @@
-import Mail = require('nodemailer/lib/mailer');
-import * as nodemailer from 'nodemailer';
-
 import { Inject, Injectable } from '@nestjs/common';
-import emailConfig from 'src/config/emailConfig';
-import { ConfigType } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 interface EmailOptions {
   to: string;
@@ -13,23 +12,36 @@ interface EmailOptions {
 
 @Injectable()
 export class EmailService {
-  private transporter: Mail;
+  private transporter: nodemailer.Transporter;
 
   constructor(
-    @Inject(emailConfig.KEY) private config: ConfigType<typeof emailConfig>,
+    private configService: ConfigService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
+    this.logger.info('Initializing EmailService', { context: 'EmailService' });
+    
     this.transporter = nodemailer.createTransport({
-      service: config.service,
+      service: this.configService.get('EMAIL_SERVICE'),
       auth: {
-        user: config.auth.user,
-        pass: config.auth.pass,
+        user: this.configService.get('EMAIL_AUTH_USER'),
+        pass: this.configService.get('EMAIL_AUTH_PASSWORD'),
       }
+    });
+
+    this.logger.info('Email transporter created', { 
+      context: 'EmailService',
+      service: this.configService.get('EMAIL_SERVICE'),
+      user: this.configService.get('EMAIL_AUTH_USER')
     });
   }
 
   async sendMemberJoinVerification(emailAddress: string, signupVerifyToken: string) {
-    const baseUrl = this.config.baseUrl;
+    this.logger.info('Preparing verification email', { 
+      context: 'EmailService',
+      to: emailAddress
+    });
 
+    const baseUrl = this.configService.get('EMAIL_BASE_URL');
     const url = `${baseUrl}/users/email-verify?signupVerifyToken=${signupVerifyToken}`;
 
     const mailOptions: EmailOptions = {
@@ -41,8 +53,28 @@ export class EmailService {
           <button>가입확인</button>
         </form>
       `
-    }
+    };
 
-    return await this.transporter.sendMail(mailOptions);
+    try {
+      this.logger.debug('Sending verification email', { 
+        context: 'EmailService',
+        to: emailAddress,
+        verifyUrl: url
+      });
+
+      await this.transporter.sendMail(mailOptions);
+      
+      this.logger.info('Verification email sent successfully', { 
+        context: 'EmailService',
+        to: emailAddress
+      });
+    } catch (error) {
+      this.logger.error('Failed to send verification email', { 
+        context: 'EmailService',
+        error: error.message,
+        to: emailAddress
+      });
+      throw error;
+    }
   }
 }

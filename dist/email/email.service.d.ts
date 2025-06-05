@@ -1,8 +1,9 @@
-import emailConfig from 'src/config/emailConfig';
-import { ConfigType } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
+import { Logger } from 'winston';
 export declare class EmailService {
-    private config;
+    private configService;
+    private readonly logger;
     private transporter;
-    constructor(config: ConfigType<typeof emailConfig>);
-    sendMemberJoinVerification(emailAddress: string, signupVerifyToken: string): Promise<any>;
+    constructor(configService: ConfigService, logger: Logger);
+    sendMemberJoinVerification(emailAddress: string, signupVerifyToken: string): Promise<void>;
 }

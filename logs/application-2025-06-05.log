@@ -1,0 +1,20 @@
+{"context":"UsersService","level":"info","message":"UsersService initialized","timestamp":"2025-06-05T03:32:22.634Z"}
+{"context":"UsersService","level":"info","message":"UsersService initialized","timestamp":"2025-06-05T03:33:06.516Z"}
+{"context":"EmailService","level":"info","message":"Initializing EmailService","timestamp":"2025-06-05T04:42:07.111Z"}
+{"context":"EmailService","level":"info","message":"Email transporter created","service":"gmail","timestamp":"2025-06-05T04:42:07.112Z","user":"your-email@gmail.com"}
+{"context":"UsersService","level":"info","message":"UsersService initialized","timestamp":"2025-06-05T04:42:07.127Z"}
+{"context":"EmailService","level":"info","message":"Initializing EmailService","timestamp":"2025-06-05T04:42:30.027Z"}
+{"context":"EmailService","level":"info","message":"Email transporter created","service":"gmail","timestamp":"2025-06-05T04:42:30.029Z","user":"your-email@gmail.com"}
+{"context":"UsersService","level":"info","message":"UsersService initialized","timestamp":"2025-06-05T04:42:30.042Z"}
+{"context":"EmailService","level":"info","message":"Initializing EmailService","timestamp":"2025-06-05T04:53:06.635Z"}
+{"context":"EmailService","level":"info","message":"Email transporter created","service":"gmail","timestamp":"2025-06-05T04:53:06.636Z","user":"your-email@gmail.com"}
+{"context":"UsersService","level":"info","message":"UsersService initialized","timestamp":"2025-06-05T04:53:06.650Z"}
+{"context":"UsersService","email":"hama@example.com","level":"info","message":"Creating new user","name":"이승현","timestamp":"2025-06-05T04:53:10.538Z"}
+{"context":"UsersService","email":"hama@example.com","level":"warn","message":"User already exists","timestamp":"2025-06-05T04:53:10.543Z"}
+{"context":"UsersService","email":"hama@example.com","error":"해당 이메일로는 가입할 수 없습니다.","level":"error","message":"Failed to create user","name":"이승현","timestamp":"2025-06-05T04:53:10.544Z"}
+{"context":"EmailService","level":"info","message":"Initializing EmailService","timestamp":"2025-06-05T04:55:07.831Z"}
+{"context":"EmailService","level":"info","message":"Email transporter created","service":"gmail","timestamp":"2025-06-05T04:55:07.832Z","user":"your-email@gmail.com"}
+{"context":"UsersService","level":"info","message":"UsersService initialized","timestamp":"2025-06-05T04:55:07.846Z"}
+{"context":"EmailService","level":"info","message":"Initializing EmailService","timestamp":"2025-06-05T04:55:54.045Z"}
+{"context":"EmailService","level":"info","message":"Email transporter created","service":"gmail","timestamp":"2025-06-05T04:55:54.046Z","user":"your-email@gmail.com"}
+{"context":"UsersService","level":"info","message":"UsersService initialized","timestamp":"2025-06-05T04:55:54.060Z"}

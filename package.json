@@ -23,7 +23,6 @@
     "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/ormconfig.ts",
     "migration:create": "typeorm migration:create",
     "migration:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d src/ormconfig.ts"
-
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
@@ -37,13 +36,16 @@
     "joi": "^17.5.0",
     "jsonwebtoken": "^8.5.1",
     "mysql2": "^2.3.3",
+    "nest-winston": "^1.10.2",
     "nodemailer": "^6.7.2",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.3.0",
     "typeorm": "^0.3.7",
     "ulid": "^2.3.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",

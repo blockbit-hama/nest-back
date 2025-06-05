@@ -10,8 +10,10 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
+const nest_winston_1 = require("nest-winston");
 const emailConfig_1 = require("./config/emailConfig");
 const database_config_1 = require("./config/database.config");
+const logging_config_1 = require("./config/logging.config");
 const validationSchema_1 = require("./config/validationSchema");
 const users_module_1 = require("./users/users.module");
 const authConfig_1 = require("./config/authConfig");
@@ -20,12 +22,18 @@ let AppModule = class AppModule {
 AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            users_module_1.UsersModule,
             config_1.ConfigModule.forRoot({
-                envFilePath: [`${__dirname}/config/env/.${process.env.NODE_ENV || 'development'}.env`],
-                load: [emailConfig_1.default, authConfig_1.default, database_config_1.default],
+                envFilePath: [
+                    `${__dirname}/config/env/.${process.env.NODE_ENV || 'development'}.env`,
+                ],
+                load: [emailConfig_1.default, authConfig_1.default, database_config_1.default, logging_config_1.default],
                 isGlobal: true,
                 validationSchema: validationSchema_1.validationSchema,
+            }),
+            nest_winston_1.WinstonModule.forRootAsync({
+                imports: [config_1.ConfigModule],
+                inject: [config_1.ConfigService],
+                useFactory: (configService) => configService.get('logging.options'),
             }),
             typeorm_1.TypeOrmModule.forRootAsync({
                 imports: [config_1.ConfigModule],
@@ -42,6 +50,7 @@ AppModule = __decorate([
                 }),
                 inject: [config_1.ConfigService],
             }),
+            users_module_1.UsersModule,
         ],
         controllers: [],
         providers: [],

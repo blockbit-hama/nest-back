@@ -1,17 +1,16 @@
-import authConfig from 'src/config/authConfig';
-import { ConfigType } from '@nestjs/config';
+import * as jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
+import { Logger } from 'winston';
 interface User {
     id: string;
     name: string;
     email: string;
 }
 export declare class AuthService {
-    private config;
-    constructor(config: ConfigType<typeof authConfig>);
+    private readonly configService;
+    private readonly logger;
+    constructor(configService: ConfigService, logger: Logger);
     login(user: User): string;
-    verify(jwtString: string): {
-        userId: string;
-        email: string;
-    };
+    verify(jwtString: string): string | jwt.JwtPayload;
 }
 export {};

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ch10-auth.iml" filepath="$PROJECT_DIR$/.idea/ch10-auth.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/nest-back.iml" filepath="$PROJECT_DIR$/.idea/nest-back.iml" />
     </modules>
   </component>
 </project>
