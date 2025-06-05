@@ -5,6 +5,7 @@ import { WinstonModule } from 'nest-winston';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ExceptionModule } from './exception/exception.module';
+import { HealthCheckModule } from './health-check/health-check.module';
 import * as winston from 'winston';
 import { join } from 'path';
 import { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
@@ -69,6 +70,7 @@ import { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOpti
     AuthModule,
     UsersModule,
     ExceptionModule,
+    HealthCheckModule,
   ],
 })
 export class AppModule {}

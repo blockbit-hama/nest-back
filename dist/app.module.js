@@ -14,6 +14,7 @@ const nest_winston_1 = require("nest-winston");
 const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const exception_module_1 = require("./exception/exception.module");
+const health_check_module_1 = require("./health-check/health-check.module");
 const winston = require("winston");
 const path_1 = require("path");
 let AppModule = class AppModule {
@@ -71,6 +72,7 @@ AppModule = __decorate([
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             exception_module_1.ExceptionModule,
+            health_check_module_1.HealthCheckModule,
         ],
     })
 ], AppModule);
