@@ -8,85 +8,105 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
-const jwt = require("jsonwebtoken");
 const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
+const users_service_1 = require("../users/users.service");
+const custom_exceptions_1 = require("../exception/custom-exceptions");
+const bcrypt = require("bcrypt");
+const uuid_1 = require("uuid");
 const config_1 = require("@nestjs/config");
-const nest_winston_1 = require("nest-winston");
-const winston_1 = require("winston");
+const nodemailer = require("nodemailer");
 let AuthService = class AuthService {
-    constructor(configService, logger) {
+    constructor(usersService, jwtService, configService) {
+        this.usersService = usersService;
+        this.jwtService = jwtService;
         this.configService = configService;
-        this.logger = logger;
-    }
-    login(user) {
-        this.logger.info('User login attempt', {
-            context: 'AuthService',
-            userId: user.id,
-            email: user.email,
+        this.transporter = nodemailer.createTransport({
+            service: this.configService.get('EMAIL_SERVICE'),
+            auth: {
+                user: this.configService.get('EMAIL_AUTH_USER'),
+                pass: this.configService.get('EMAIL_AUTH_PASSWORD'),
+            },
         });
-        try {
-            const payload = Object.assign({}, user);
-            const secret = this.configService.get('AUTH_JWT_SECRET');
-            this.logger.debug('Generating JWT token', {
-                context: 'AuthService',
-                userId: user.id,
-            });
-            const token = jwt.sign(payload, secret, {
-                expiresIn: '1d',
-                audience: 'nest-wallet',
-                issuer: 'nest-wallet',
-            });
-            this.logger.info('Login successful, token generated', {
-                context: 'AuthService',
-                userId: user.id,
-            });
-            return token;
-        }
-        catch (error) {
-            this.logger.error('Login failed', {
-                context: 'AuthService',
-                error: error.message,
-                userId: user.id,
-                email: user.email,
-            });
-            throw error;
-        }
     }
-    verify(jwtString) {
-        this.logger.debug('Verifying JWT token', {
-            context: 'AuthService',
-            token: jwtString.substring(0, 10) + '...',
+    async sendVerificationEmail(email, signupVerifyToken) {
+        const baseUrl = this.configService.get('EMAIL_BASE_URL');
+        const verificationUrl = `${baseUrl}/auth/verify-email?signupVerifyToken=${signupVerifyToken}`;
+        await this.transporter.sendMail({
+            to: email,
+            subject: '이메일 인증을 완료해주세요.',
+            html: `
+        <h3>이메일 인증</h3>
+        <p>아래 링크를 클릭하여 이메일 인증을 완료해주세요:</p>
+        <a href="${verificationUrl}">${verificationUrl}</a>
+      `,
         });
-        try {
-            const payload = jwt.verify(jwtString, this.configService.get('AUTH_JWT_SECRET'));
-            const { id, email } = payload;
-            this.logger.info('Token verified successfully', {
-                context: 'AuthService',
-                userId: id,
-                email,
-            });
-            return payload;
+    }
+    async register(registerDto) {
+        const existingUser = await this.usersService.findByEmail(registerDto.email);
+        if (existingUser) {
+            throw new custom_exceptions_1.DuplicateEntityException('이메일');
         }
-        catch (error) {
-            this.logger.error('Token verification failed', {
-                context: 'AuthService',
-                error: error.message,
-                token: jwtString.substring(0, 10) + '...',
-            });
-            throw new common_1.UnauthorizedException('Invalid token');
+        const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+        const signupVerifyToken = (0, uuid_1.v4)();
+        const user = await this.usersService._createUser(Object.assign(Object.assign({}, registerDto), { password: hashedPassword, signupVerifyToken, isEmailVerified: false }));
+        await this.sendVerificationEmail(user.email, signupVerifyToken);
+        const payload = { sub: user.id, email: user.email };
+        return {
+            access_token: this.jwtService.sign(payload),
+            message: '인증 이메일을 발송했습니다. 이메일을 확인해주세요.',
+        };
+    }
+    async login(loginDto) {
+        const user = await this.usersService.findByEmail(loginDto.email);
+        if (!user) {
+            throw new custom_exceptions_1.InvalidCredentialsException();
+        }
+        const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+        if (!isPasswordValid) {
+            throw new custom_exceptions_1.InvalidCredentialsException();
+        }
+        if (!user.isEmailVerified) {
+            throw new common_1.UnauthorizedException('이메일 인증이 필요합니다.');
+        }
+        const payload = { sub: user.id, email: user.email };
+        return {
+            access_token: this.jwtService.sign(payload),
+        };
+    }
+    async verifyEmail(signupVerifyToken) {
+        const user = await this.usersService.findOne({
+            where: { signupVerifyToken },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('유효하지 않은 인증 토큰입니다.');
+        }
+        await this.usersService.update(user.id, {
+            signupVerifyToken: null,
+            isEmailVerified: true,
+        });
+        const payload = { sub: user.id, email: user.email };
+        return {
+            access_token: this.jwtService.sign(payload),
+            message: '이메일 인증이 완료되었습니다.',
+        };
+    }
+    verify(token) {
+        try {
+            return this.jwtService.verify(token);
+        }
+        catch (e) {
+            throw new common_1.UnauthorizedException('유효하지 않은 토큰입니다.');
         }
     }
 };
 AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __param(1, (0, common_1.Inject)(nest_winston_1.WINSTON_MODULE_PROVIDER)),
-    __metadata("design:paramtypes", [config_1.ConfigService,
-        winston_1.Logger])
+    __metadata("design:paramtypes", [users_service_1.UsersService,
+        jwt_1.JwtService,
+        config_1.ConfigService])
 ], AuthService);
 exports.AuthService = AuthService;
 //# sourceMappingURL=auth.service.js.map

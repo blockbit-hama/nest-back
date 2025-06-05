@@ -1,16 +1,25 @@
-import * as jwt from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
+import { UsersService } from '../users/users.service';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '@nestjs/config';
-import { Logger } from 'winston';
-interface User {
-    id: string;
-    name: string;
-    email: string;
-}
 export declare class AuthService {
+    private readonly usersService;
+    private readonly jwtService;
     private readonly configService;
-    private readonly logger;
-    constructor(configService: ConfigService, logger: Logger);
-    login(user: User): string;
-    verify(jwtString: string): string | jwt.JwtPayload;
+    private transporter;
+    constructor(usersService: UsersService, jwtService: JwtService, configService: ConfigService);
+    private sendVerificationEmail;
+    register(registerDto: RegisterDto): Promise<{
+        access_token: string;
+        message: string;
+    }>;
+    login(loginDto: LoginDto): Promise<{
+        access_token: string;
+    }>;
+    verifyEmail(signupVerifyToken: string): Promise<{
+        access_token: string;
+        message: string;
+    }>;
+    verify(token: string): any;
 }
-export {};

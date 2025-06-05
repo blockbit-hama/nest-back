@@ -1,48 +1,74 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WinstonModule } from 'nest-winston';
-import emailConfig from './config/emailConfig';
-import databaseConfig from './config/database.config';
-import loggingConfig from './config/logging.config';
-import { validationSchema } from './config/validationSchema';
+import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import authConfig from './config/authConfig';
+import { ExceptionModule } from './exception/exception.module';
+import * as winston from 'winston';
+import { join } from 'path';
+import { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: [
-        `${__dirname}/config/env/.${process.env.NODE_ENV || 'development'}.env`,
-      ],
-      load: [emailConfig, authConfig, databaseConfig, loggingConfig],
       isGlobal: true,
-      validationSchema,
-    }),
-    WinstonModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) =>
-        configService.get('logging.options'),
+      envFilePath: `.${process.env.NODE_ENV || 'development'}.env`,
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: configService.get<'mysql'>('database.type'),
-        host: configService.get<string>('database.host'),
-        port: configService.get<number>('database.port'),
-        username: configService.get<string>('database.username'),
-        password: configService.get<string>('database.password'),
-        database: configService.get<string>('database.database'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false,
-        autoLoadEntities: true,
-      }),
       inject: [ConfigService],
+      useFactory: (configService: ConfigService): MysqlConnectionOptions => {
+        const config: MysqlConnectionOptions = {
+          type: 'mysql' as const,
+          host: configService.get('DB_HOST'),
+          port: configService.get<number>('DB_PORT'),
+          username: configService.get('DB_USERNAME'),
+          password: configService.get('DB_PASSWORD'),
+          database: configService.get('DB_DATABASE'),
+          entities: [join(__dirname, '**', '*.entity{.ts,.js}')],
+          synchronize: configService.get('NODE_ENV') !== 'production',
+          logging: configService.get('NODE_ENV') === 'development',
+          charset: 'utf8mb4',
+        };
+
+        console.log('Database Config:', {
+          host: config.host,
+          port: config.port,
+          username: config.username,
+          database: config.database,
+        });
+
+        return config;
+      },
     }),
+    WinstonModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        transports: [
+          new winston.transports.Console({
+            level: configService.get('LOG_LEVEL', 'debug'),
+            format: winston.format.combine(
+              winston.format.timestamp(),
+              winston.format.json(),
+            ),
+          }),
+          new winston.transports.File({
+            dirname: configService.get('LOG_DIR', 'logs'),
+            filename: 'error.log',
+            level: 'error',
+            maxsize: 10485760, // 10MB
+            maxFiles: 14,
+            format: winston.format.combine(
+              winston.format.timestamp(),
+              winston.format.json(),
+            ),
+          }),
+        ],
+      }),
+    }),
+    AuthModule,
     UsersModule,
+    ExceptionModule,
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

@@ -10,36 +10,30 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateUserDto = void 0;
-const common_1 = require("@nestjs/common");
-const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
-const not_in_1 = require("../../utils/decorators/not-in");
+const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 class CreateUserDto {
 }
 __decorate([
-    (0, class_transformer_1.Transform)(params => params.value.trim()),
-    (0, not_in_1.NotIn)('password', { message: 'password는 name과 같은 문자열을 포함할 수 없습니다.' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(2),
-    (0, class_validator_1.MaxLength)(30),
-    __metadata("design:type", String)
-], CreateUserDto.prototype, "name", void 0);
-__decorate([
-    (0, class_transformer_1.Transform)(({ value, obj }) => {
-        if (obj.password.includes(value.trim())) {
-            throw new common_1.BadRequestException('password는 name과 같은 문자열을 포함할 수 없습니다.');
-        }
-        return value.trim();
-    }),
-    (0, class_validator_1.IsString)(),
+    (0, swagger_1.ApiProperty)({ example: 'test@example.com' }),
     (0, class_validator_1.IsEmail)(),
     (0, class_validator_1.MaxLength)(60),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "email", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'password123' }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Matches)(/^[A-Za-z\d!@#$%^&*()]{8,30}$/),
+    (0, class_validator_1.MinLength)(8),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '홍길동' }),
+    (0, class_transformer_1.Transform)((params) => params.value.trim()),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    (0, class_validator_1.MaxLength)(30),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "name", void 0);
 exports.CreateUserDto = CreateUserDto;
 //# sourceMappingURL=create-user.dto.js.map

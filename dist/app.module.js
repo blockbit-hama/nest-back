@@ -11,49 +11,67 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const nest_winston_1 = require("nest-winston");
-const emailConfig_1 = require("./config/emailConfig");
-const database_config_1 = require("./config/database.config");
-const logging_config_1 = require("./config/logging.config");
-const validationSchema_1 = require("./config/validationSchema");
+const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
-const authConfig_1 = require("./config/authConfig");
+const exception_module_1 = require("./exception/exception.module");
+const winston = require("winston");
+const path_1 = require("path");
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot({
-                envFilePath: [
-                    `${__dirname}/config/env/.${process.env.NODE_ENV || 'development'}.env`,
-                ],
-                load: [emailConfig_1.default, authConfig_1.default, database_config_1.default, logging_config_1.default],
                 isGlobal: true,
-                validationSchema: validationSchema_1.validationSchema,
-            }),
-            nest_winston_1.WinstonModule.forRootAsync({
-                imports: [config_1.ConfigModule],
-                inject: [config_1.ConfigService],
-                useFactory: (configService) => configService.get('logging.options'),
+                envFilePath: `.${process.env.NODE_ENV || 'development'}.env`,
             }),
             typeorm_1.TypeOrmModule.forRootAsync({
-                imports: [config_1.ConfigModule],
-                useFactory: (configService) => ({
-                    type: configService.get('database.type'),
-                    host: configService.get('database.host'),
-                    port: configService.get('database.port'),
-                    username: configService.get('database.username'),
-                    password: configService.get('database.password'),
-                    database: configService.get('database.database'),
-                    entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                    synchronize: false,
-                    autoLoadEntities: true,
-                }),
                 inject: [config_1.ConfigService],
+                useFactory: (configService) => {
+                    const config = {
+                        type: 'mysql',
+                        host: configService.get('DB_HOST'),
+                        port: configService.get('DB_PORT'),
+                        username: configService.get('DB_USERNAME'),
+                        password: configService.get('DB_PASSWORD'),
+                        database: configService.get('DB_DATABASE'),
+                        entities: [(0, path_1.join)(__dirname, '**', '*.entity{.ts,.js}')],
+                        synchronize: configService.get('NODE_ENV') !== 'production',
+                        logging: configService.get('NODE_ENV') === 'development',
+                        charset: 'utf8mb4',
+                    };
+                    console.log('Database Config:', {
+                        host: config.host,
+                        port: config.port,
+                        username: config.username,
+                        database: config.database,
+                    });
+                    return config;
+                },
             }),
+            nest_winston_1.WinstonModule.forRootAsync({
+                inject: [config_1.ConfigService],
+                useFactory: (configService) => ({
+                    transports: [
+                        new winston.transports.Console({
+                            level: configService.get('LOG_LEVEL', 'debug'),
+                            format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+                        }),
+                        new winston.transports.File({
+                            dirname: configService.get('LOG_DIR', 'logs'),
+                            filename: 'error.log',
+                            level: 'error',
+                            maxsize: 10485760,
+                            maxFiles: 14,
+                            format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+                        }),
+                    ],
+                }),
+            }),
+            auth_module_1.AuthModule,
             users_module_1.UsersModule,
+            exception_module_1.ExceptionModule,
         ],
-        controllers: [],
-        providers: [],
     })
 ], AppModule);
 exports.AppModule = AppModule;

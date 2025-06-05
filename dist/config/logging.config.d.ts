@@ -5,14 +5,14 @@ declare const _default: (() => {
     dir: string;
     maxFiles: string;
     options: {
-        transports: (DailyRotateFile | winston.transports.ConsoleTransportInstance)[];
+        transports: (winston.transports.ConsoleTransportInstance | DailyRotateFile)[];
     };
 }) & import("@nestjs/config").ConfigFactoryKeyHost<{
     level: string;
     dir: string;
     maxFiles: string;
     options: {
-        transports: (DailyRotateFile | winston.transports.ConsoleTransportInstance)[];
+        transports: (winston.transports.ConsoleTransportInstance | DailyRotateFile)[];
     };
 }>;
 export default _default;
